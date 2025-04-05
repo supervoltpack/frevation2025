@@ -11,10 +11,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Player class to manage player details
 class Player:
     def __init__(self, name):
-        self.name = name.strip()  # Strip spaces from player name
+        self.name = name.strip()
         self.level = 1
         self.xp = 0
 
@@ -33,8 +32,6 @@ class Player:
     def __repr__(self):
         return f"{self.name} | Level {self.level} | XP {self.xp}"
 
-
-# Leaderboard class to manage players and XP
 class Leaderboard:
     def __init__(self):
         self.players = {}
@@ -67,19 +64,14 @@ class Leaderboard:
             sorted_players = sorted(self.players.values(), key=lambda p: p.xp, reverse=True)
         return sorted_players
 
-
-# Initialize Leaderboard in session state if not already initialized
 if 'leaderboard' not in st.session_state:
     st.session_state.leaderboard = Leaderboard()
 
 board = st.session_state.leaderboard
 
-# Streamlit UI
-# Centering the title
 st.markdown("<h1 style='text-align: center;'>Frevation</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align: center;'>1 Level = 100 XP</h3>", unsafe_allow_html=True)
 
-# Add Player Section
 st.markdown("<h2 style='text-align: center;'>Add Player</h2>", unsafe_allow_html=True)
 player_name = st.text_input("Enter player's name:")
 if st.button("Add Player"):
@@ -91,7 +83,6 @@ if st.button("Add Player"):
     else:
         st.warning("❌ Please enter a valid name.")
 
-# Remove Player Section
 st.markdown("<h2 style='text-align: center;'>Remove Player</h2>", unsafe_allow_html=True)
 remove_player_name = st.selectbox("Select player to remove:", list(board.players.keys()))
 if st.button("Remove Player"):
@@ -103,7 +94,6 @@ if st.button("Remove Player"):
     else:
         st.warning("❌ Please select a valid player.")
 
-# Add XP Section
 st.markdown("<h2 style='text-align: center;'>Add or Remove XP</h2>", unsafe_allow_html=True)
 xp_name = st.text_input("Enter player's name to add/remove XP:")
 xp_amount = st.number_input("Enter amount of XP to add/remove:", min_value=1)
@@ -116,7 +106,6 @@ if st.button("Add XP"):
     else:
         st.warning("❌ Please enter a valid name and XP amount.")
 
-# View Leaderboard Section
 st.markdown("<h2 style='text-align: center;'>View Leaderboard</h2>", unsafe_allow_html=True)
 sort_option = st.radio("Sort leaderboard by:", ("Level", "XP"))
 
@@ -126,13 +115,11 @@ if st.button("Show Leaderboard"):
     for i, player in enumerate(leaderboard, start=1):
         st.write(f"{i}. {player}")
 
-# --- Two buttons centered ---
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     ai_button = st.button("Your Daily UV Safety Check", use_container_width=True)
     calendar_button = st.button("Go to Calendar", use_container_width=True)
 
-# --- Actions after clicking buttons ---
 if ai_button:
     import os
     import numpy as np
@@ -148,8 +135,6 @@ if ai_button:
     from sklearn.metrics import classification_report
     import gradio as gr
 
-    
-    # Load histology dataset
     project = "histology"
     prefix = "https://storage.googleapis.com/inspirit-ai-data-bucket-1/Data/AI%20Scholars/Sessions%206%20-%2010%20(Projects)/Project%20-%20Towards%20Precision%20Medicine/"
     os.system(f'curl -O "{prefix}images.npy"')
@@ -159,17 +144,13 @@ if ai_button:
     os.remove("images.npy")
     os.remove("labels.npy")
 
-    # Normalize images
     images = images.astype('float32') / 255.0
 
-    # One-hot encode labels
     label_names = np.unique(labels)
     labels_ohe = np.array(pd.get_dummies(labels))
 
-    # Train-test split
     X_train, X_test, y_train, y_test = train_test_split(images, labels_ohe, test_size=0.2, random_state=42)
 
-    # Data augmentation
     datagen = ImageDataGenerator(
         rotation_range=15,
         zoom_range=0.1,
@@ -179,7 +160,6 @@ if ai_button:
     )
     datagen.fit(X_train)
 
-    # Build model using MobileNetV2
     base_model = MobileNetV2(input_shape=X_train.shape[1:], include_top=False, weights='imagenet')
     base_model.trainable = False  # Freeze base
 
@@ -199,7 +179,6 @@ if ai_button:
         ReduceLROnPlateau(patience=5, factor=0.5, min_lr=1e-6)
     ]
 
-    # Train
     history = model.fit(
         datagen.flow(X_train, y_train, batch_size=32),
         validation_data=(X_test, y_test),
@@ -207,7 +186,6 @@ if ai_button:
         callbacks=callbacks
     )
 
-    # Evaluate
     loss, acc = model.evaluate(X_test, y_test)
     print(f"Test accuracy: {acc:.4f}")
 
@@ -216,7 +194,6 @@ if ai_button:
     y_true = np.argmax(y_test, axis=1)
     print(classification_report(y_true, y_pred, target_names=label_names))
 
-    # ---- Gradio GUI ---- #
     def predict_image(img):
         img = img.resize((X_train.shape[1], X_train.shape[2]))
         img = np.array(img).astype("float32") / 255.0
@@ -240,48 +217,36 @@ if calendar_button:
     from tkinter import messagebox
     from datetime import datetime, timedelta
 
-    # List to store upcoming workout times
     upcoming_workouts = []
 
-    # Function to send notification (simplified for this example)
     def send_workout_notification(event_time):
         while True:
             current_time = datetime.now()
 
-            # Check if the current time has reached the event time
             if current_time >= event_time:
                 # Show a simple notification
                 messagebox.showinfo("Workout Reminder", "It's time for your workout!")
                 break  # Stop checking once the notification is sent
 
-            # Wait for a while before checking again
             time.sleep(1)
 
-        # Function to trigger workout scheduling
     def schedule_workout():
         try:
-            # Get the user input time for the workout
             workout_time = entry_time.get()
 
-            # Parse the time input
             event_time = datetime.strptime(workout_time, '%Y-%m-%d %H:%M:%S')
 
-            # Add the workout to the upcoming workouts list
             upcoming_workouts.append(event_time)
 
-            # Schedule the workout notification
             send_workout_notification(event_time)
 
-            # Notify the user
             messagebox.showinfo("Workout Scheduled", f"Workout scheduled for {event_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-            # Update the text box with the upcoming workouts
             update_workout_list()
 
         except ValueError:
             messagebox.showerror("Invalid Input", "Please enter the time in the format YYYY-MM-DD HH:MM:SS")
 
-    # Function to update the upcoming workouts list in the Text widget
     def update_workout_list():
         workout_text.delete(1.0, tk.END)  # Clear the existing text
         if upcoming_workouts:
@@ -291,32 +256,25 @@ if calendar_button:
         else:
             workout_text.insert(tk.END, "No upcoming workouts scheduled.")
 
-    # Create the main window
     window = tk.Tk()
     window.title("Workout Reminder")
 
-    # Create a frame for scheduling workouts
     frame_schedule = tk.Frame(window)
     frame_schedule.pack(pady=20)
 
-    # Create a label and entry for the user to input the workout time
     label = tk.Label(frame_schedule, text="Enter workout time (YYYY-MM-DD HH:MM:SS):")
     label.pack(pady=10)
 
     entry_time = tk.Entry(frame_schedule)
     entry_time.pack(pady=10)
 
-    # Create a button to trigger workout scheduling
     button_schedule = tk.Button(frame_schedule, text="Schedule Workout", command=schedule_workout)
     button_schedule.pack(pady=20)
 
-    # Create a Text widget to display the upcoming workouts
     workout_text = tk.Text(window, height=10, width=50)
     workout_text.pack(pady=20)
 
-    # Initial display of upcoming workouts
     update_workout_list()
 
-    # Run the Tkinter event loop
     window.mainloop()
 
