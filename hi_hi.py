@@ -1,4 +1,16 @@
 import streamlit as st
+
+st.markdown(
+    """
+    <style>
+    [data-testid="stAppViewContainer"] {
+        background-color: #77dd77 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # Player class to manage player details
 class Player:
     def __init__(self, name):
